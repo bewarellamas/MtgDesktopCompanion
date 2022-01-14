@@ -98,5 +98,16 @@
 			"Midnight Hunt Commander":"Innistrad Midnight Hunt Commander"
 		}
 		
+	},	
+	"Card Kingdom CSV": {
+		"nameSet": {
+			"Ravnica: City Of Guilds": "Ravnica",
+			"Zendikar Rising Commander": "Zendikar Rising Commander Decks"
+			
+		
+		
+		}
+		
+		
 	}
 }
