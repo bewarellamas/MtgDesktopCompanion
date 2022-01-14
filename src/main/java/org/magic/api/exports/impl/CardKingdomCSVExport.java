@@ -39,18 +39,33 @@ public class CardKingdomCSVExport extends AbstractFormattedFileCardExport {
 		var line = new StringBuilder(columns);
 		for(MagicCardStock mc : stock)
 		{
+			
 			String name=mc.getProduct().getName();
+			String set = PluginsAliasesProvider.inst().getSetNameFor(this , mc.getProduct().getCurrentSet());
+			
+			
+			if(name.contains("//") && (!mc.getProduct().getLayout().toString().equalsIgnoreCase(MTGLayout.SPLIT.toString())))
+			{
+				name = name.split(" //")[0];
+			}
+			
+			if(mc.getProduct().isShowCase())
+			{
+				name = name + " (Showcase)";
+				set = set + " Variants";
+			}
+			
+			if(set.contains("Mystery Booster") || set.contentEquals("The List"))
+				set = "Mystery Booster/The List";
+			
+			
+			
 			if(mc.getProduct().getName().contains(getSeparator()))
 				name="\""+mc.getProduct().getName()+"\"";
 			
 			
-			if(name.contains("//") && (!mc.getProduct().getLayout().toString().equalsIgnoreCase(MTGLayout.SPLIT.toString())))
-				name = name.split(" //")[0];
-	
-			
-			
 			line.append(name).append(getSeparator());
-			line.append(PluginsAliasesProvider.inst().getSetNameFor(this , mc.getProduct().getCurrentSet())).append(getSeparator());
+			line.append(set).append(getSeparator());
 			line.append(String.valueOf(mc.isFoil())).append(getSeparator());
 			line.append(mc.getQte()).append(getSeparator()).append(System.lineSeparator());		
 			notify(mc.getProduct());
