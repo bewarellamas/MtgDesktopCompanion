@@ -54,7 +54,10 @@ import org.magic.api.beans.MagicFormat;
 import org.magic.api.beans.MagicPrice;
 import org.magic.api.beans.SealedStock;
 import org.magic.api.beans.WebShopConfig;
+import org.magic.api.beans.audit.DAOInfo;
+import org.magic.api.beans.audit.DiscordInfo;
 import org.magic.api.beans.audit.JsonQueryInfo;
+import org.magic.api.beans.audit.NetworkInfo;
 import org.magic.api.beans.enums.EnumItems;
 import org.magic.api.beans.enums.TransactionStatus;
 import org.magic.api.beans.shop.Category;
@@ -103,7 +106,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import nl.basjes.parse.useragent.UserAgent;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import spark.Request;
 import spark.Response;
@@ -231,21 +233,26 @@ public class JSONHttpServer extends AbstractMTGServer {
 	
 
 	private void addInfo(Request request, Response response) {
-		var info= new JsonQueryInfo();
+		
+		if(!request.uri().startsWith("/admin"))
+		{
+			var info= new JsonQueryInfo();
 			info.setStart(start);
 			info.setContentType(request.contentType());
 			info.setIp(request.ip());
 			info.setMethod(request.requestMethod());
 			info.setUrl(request.uri());
 			info.setParameters(request.params());
-			info.setAttributs(request.attributes());
+			info.setQuery(request.queryParams().stream().collect(Collectors.toMap(q->q, request::queryParams)));
+			info.setSessionId(request.session().id());
+			info.setPath(request.servletPath());
+			info.setAttributs(request.attributes().stream().collect(Collectors.toMap(a->a, request::attribute)));
 			info.setHeaders(request.headers().stream().collect(Collectors.toMap(s->s,request::headers)));			
 			info.setStatus(response.status());
 			info.setUserAgent(ua.parse(request.userAgent()));
 			info.setEnd(Instant.now());
-			
-		TechnicalServiceManager.inst().store(info);
-		
+			TechnicalServiceManager.inst().store(info);
+		}
 	}
 
 
@@ -417,9 +424,6 @@ public class JSONHttpServer extends AbstractMTGServer {
 		get("/keywords", URLTools.HEADER_JSON, (request, response) -> AbstractKeyWordsManager.getInstance().toJson(), transformer);
 		
 		get("/categories", URLTools.HEADER_JSON, (request, response) -> EnumItems.values(), transformer);
-		
-		
-		
 		
 		get("/cards/name/:idEd/:cName", URLTools.HEADER_JSON, (request, response) -> {
 			MagicEdition ed = getEnabledPlugin(MTGCardsProvider.class).getSetById(request.params(ID_ED));
@@ -867,6 +871,10 @@ public class JSONHttpServer extends AbstractMTGServer {
 			return serv.toJsonDetails();
 		}, transformer);
 		
+		get("/admin/discord", URLTools.HEADER_JSON, (request, response) -> {
+			return 	TechnicalServiceManager.inst().getDiscordInfos().stream().map(DiscordInfo::toJson).toList();
+		}, transformer);
+		
 		get("/admin/currency", URLTools.HEADER_JSON, (request, response) -> {
 			MTGControler.getInstance().getCurrencyService().clean();
 			return MTGControler.getInstance().getCurrencyService().getChanges();
@@ -878,35 +886,25 @@ public class JSONHttpServer extends AbstractMTGServer {
 		}, transformer);
 		
 		get("/admin/jdbc", URLTools.HEADER_JSON, (request, response) -> {
-			var arr = new JsonArray();
-			TechnicalServiceManager.inst().getDaoInfos().forEach(info->arr.add(info.toJson()));
-			return arr;
-			
+			return TechnicalServiceManager.inst().getDaoInfos().stream().map(DAOInfo::toJson).toList();
 		}, transformer);
 		
 		get("/admin/jsonQueries", URLTools.HEADER_JSON, (request, response) -> {
-			var arr = new JsonArray();
-			TechnicalServiceManager.inst().getJsonInfo().forEach(info->arr.add(info.toJson()));
-			return arr;
-			
+			return TechnicalServiceManager.inst().getJsonInfo().stream().map(JsonQueryInfo::toJson).toList();
 		}, transformer);
 		
 		get("/admin/threads", URLTools.HEADER_JSON, (request, response) -> {
 			return ThreadManager.getInstance().toJson();
 		}, transformer);
 		
-		
 		get("/admin/network", URLTools.HEADER_JSON, (request, response) -> {
-			var arr = new JsonArray();
-			TechnicalServiceManager.inst().getNetworkInfos().forEach(net->arr.add(net.toJson()));
-			return arr;
+			return TechnicalServiceManager.inst().getNetworkInfos().stream().map(NetworkInfo::toJson).toList();
 		}, transformer);
 		
 		get("/admin/clearCache", URLTools.HEADER_JSON, (request, response) -> {
 			clearCache();
 			return "ok";
 		}, transformer);
-		
 		
 		get("/admin/plugins/list", URLTools.HEADER_JSON, (request, response) -> {
 			var obj = new JsonObject();
@@ -1173,25 +1171,21 @@ public class JSONHttpServer extends AbstractMTGServer {
 	
 	
 	private JsonArray build(HistoryPrice<MagicCard> res) {
-		
-		
 		var arr = new JsonArray();
-		
 		for (Entry<Date, Double> val : res) {
 			var obj = new JsonObject();
 			obj.add("date", new JsonPrimitive(val.getKey().getTime()));
 			obj.add("value", new JsonPrimitive(val.getValue()));
-
 			arr.add(obj);
 		}
-		
 		return arr;
-		
 	}
 
 	@Override
 	public void stop() throws IOException {
 		Spark.stop();
+		
+		TechnicalServiceManager.inst().store();
 		logger.info("Server stop");
 		running = false;
 	}
@@ -1237,7 +1231,6 @@ public class JSONHttpServer extends AbstractMTGServer {
 		map.put(KEYSTORE_URI, new File(MTGConstants.DATA_DIR,"jetty.jks").getAbsolutePath());
 		map.put(KEYSTORE_PASS, "changeit");
 		map.put(CACHE_TIMEOUT, "60");
-		
 		return map;
 	}
 

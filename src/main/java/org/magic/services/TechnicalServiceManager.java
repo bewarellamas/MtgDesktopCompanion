@@ -1,17 +1,26 @@
 package org.magic.services;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+import org.magic.api.beans.audit.AbstractAuditableItem;
 import org.magic.api.beans.audit.DAOInfo;
+import org.magic.api.beans.audit.DiscordInfo;
 import org.magic.api.beans.audit.JsonQueryInfo;
 import org.magic.api.beans.audit.NetworkInfo;
 import org.magic.api.beans.audit.TaskInfo;
 import org.magic.api.beans.audit.TaskInfo.STATE;
+import org.magic.api.exports.impl.JsonExport;
+import org.magic.tools.FileTools;
 
 public class TechnicalServiceManager {
 
@@ -21,7 +30,12 @@ public class TechnicalServiceManager {
 	private List<DAOInfo> daoInfos;
 	private List<NetworkInfo> networkInfos;
 	private List<TaskInfo> tasksInfos;
-
+	private List<DiscordInfo> discordInfos;
+	protected Logger logger = MTGLogger.getLogger(this.getClass());
+	private JsonExport export;
+	private File logsDirectory = new File(MTGConstants.DATA_DIR,"audits");
+	
+	
 	public static TechnicalServiceManager inst()
 	{
 		if(inst==null)
@@ -30,14 +44,49 @@ public class TechnicalServiceManager {
 		return inst;
 	}
 	
+	public void store()
+	{
+		try {
+			storeItems(JsonQueryInfo.class,jsonInfo);
+			storeItems(DAOInfo.class,daoInfos);
+			storeItems(NetworkInfo.class,networkInfos);
+			storeItems(TaskInfo.class,tasksInfos);
+			storeItems(DiscordInfo.class,discordInfos);
+		}
+		catch(Exception e)
+		{
+			logger.error(e);
+		}
+		
+	}
+	
+	public void restore()
+	{
+		
+	}
+	
+	
+	private <T extends AbstractAuditableItem> void storeItems(Class<T> classe, List<T> items) throws IOException
+	{
+		FileTools.saveFile(Paths.get(logsDirectory.getAbsolutePath(),classe.getSimpleName()+"_"+new Date().hashCode()+"_.json").toFile(), export.toJson(items.stream().map(AbstractAuditableItem::toJson).toList()));
+	}
+	
+	
 	public TechnicalServiceManager() {
 		jsonInfo= new ArrayList<>();
 		networkInfos = new ArrayList<>();
 		daoInfos = new ArrayList<>();
 		tasksInfos = new ArrayList<>();
+		discordInfos = new ArrayList<>();
+		export = new JsonExport();
 	}
 	
-	 public List<JsonQueryInfo> getJsonInfo() {
+	
+	public List<DiscordInfo> getDiscordInfos() {
+		return discordInfos;
+	}
+	
+	public List<JsonQueryInfo> getJsonInfo() {
 		return jsonInfo;
 	}
 
@@ -86,6 +135,11 @@ public class TechnicalServiceManager {
 
 	public ThreadInfo[] getThreadsInfos() {
 		return ManagementFactory.getThreadMXBean().dumpAllThreads(true, true);
+	}
+
+	public void store(DiscordInfo info) {
+		discordInfos.add(info);
+		
 	}
 	
 	

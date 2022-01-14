@@ -38,6 +38,14 @@ public class NetworkInfo extends AbstractAuditableItem{
 		return toJson().get("contentType").getAsString();
 	}
 	
+	
+	@Override
+	public void fromJson(JsonObject obj) {
+		
+		//can't do
+	}
+	
+	
 	@Override
 	public JsonObject toJson() {
 		var jo = new JsonObject();
@@ -48,6 +56,7 @@ public class NetworkInfo extends AbstractAuditableItem{
 		jo.addProperty("duration", getDuration());
 		jo.addProperty("aborted", getRequest().isAborted());
 		jo.addProperty("protocol", getRequest().getRequestLine().getProtocolVersion().toString());
+		jo.addProperty("host", getRequest().getURI().getHost());
 		
 		if(getResponse()!=null) {
 			
