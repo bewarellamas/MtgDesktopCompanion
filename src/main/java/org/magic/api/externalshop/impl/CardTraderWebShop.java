@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.api.cardtrader.enums.ConditionEnum;
 import org.api.cardtrader.modele.Categorie;
+import org.api.cardtrader.modele.User;
 import org.api.cardtrader.services.CardTraderConstants;
 import org.api.cardtrader.services.CardTraderService;
 import org.api.cardtrader.tools.URLCallInfo;
@@ -21,8 +22,8 @@ import org.magic.api.interfaces.MTGCardsProvider;
 import org.magic.api.interfaces.MTGProduct;
 import org.magic.api.interfaces.MTGStockItem;
 import org.magic.api.interfaces.abstracts.AbstractExternalShop;
-import org.magic.api.interfaces.abstracts.AbstractProduct;
-import org.magic.api.interfaces.abstracts.AbstractStockItem;
+import org.magic.api.interfaces.abstracts.extra.AbstractProduct;
+import org.magic.api.interfaces.abstracts.extra.AbstractStockItem;
 import org.magic.services.TechnicalServiceManager;
 import org.magic.tools.MTG;
 
@@ -81,7 +82,7 @@ public class CardTraderWebShop extends AbstractExternalShop {
 								    it.setQte(mp.getQty());
 								    it.setPrice(mp.getPrice().getValue());
 								var prod = AbstractProduct.createDefaultProduct();
-								prod.setProductId(mp.getIdBlueprint());
+								prod.setProductId(mp.getIdBlueprint().longValue());
 								prod.setName(mp.getName()); 
 								prod.setEdition(toExpansion(mp.getExpansion()));
 								prod.setCategory(toCategory(mp.getCategorie()));
@@ -101,7 +102,7 @@ public class CardTraderWebShop extends AbstractExternalShop {
 			var product = AbstractProduct.createDefaultProduct();
 				product.setName(bp.getName());
 				product.setUrl(bp.getImageUrl());
-				product.setProductId(bp.getId());
+				product.setProductId(bp.getId().longValue());
 				product.setCategory(toCategory(bp.getCategorie()));				
 				product.setEdition(toExpansion(bp.getExpansion()));
 				notify(product);
@@ -130,7 +131,7 @@ public class CardTraderWebShop extends AbstractExternalShop {
 	}
 
 	@Override
-	public int createProduct(MTGProduct t, Category c) throws IOException {
+	public Long createProduct(MTGProduct t, Category c) throws IOException {
 		throw new IOException("Can't create product to " + getName());
 	}
 
@@ -163,7 +164,6 @@ public class CardTraderWebShop extends AbstractExternalShop {
 			trans.setDatePayment(o.getDatePaid());
 			trans.setDateCreation(o.getDateCreation());
 			
-			
 			if(o.getDatePaid()!=null)
 				trans.setStatut(TransactionStatus.PAID);
 			
@@ -189,9 +189,13 @@ public class CardTraderWebShop extends AbstractExternalShop {
 							var prod = MTG.getEnabledPlugin(MTGCardsProvider.class).getCardByScryfallId(oi.getScryfallId());
 							prod.setEdition(prod.getCurrentSet());
 							item.setProduct(prod);
-						} catch (Exception e) {
+						} catch (Exception e)
+						{
 							logger.error(e);
-					}
+							var prod = AbstractProduct.createDefaultProduct();
+							prod.setName(oi.getName());
+							item.setProduct(prod);	
+						}
 				}
 				else
 				{
@@ -212,14 +216,20 @@ public class CardTraderWebShop extends AbstractExternalShop {
 			
 			trans.setSourceShopName(getName());
 			
+			User u = o.getBuyer();
+				
+			if(u==null)
+				u=o.getSeller();
+			
+			
 			Contact c = new Contact();
-					c.setName(o.getBuyer().getUsername());
+					c.setName(u.getUsername());
 					c.setAddress(o.getBillingAddress().getStreet());
 					c.setZipCode(o.getBillingAddress().getZip());
 					c.setCity(o.getBillingAddress().getCity());
 					c.setCountry(o.getBillingAddress().getCountry());
-					c.setEmail(o.getBuyer().getEmail());
-					c.setTelephone(o.getBuyer().getPhone());	
+					c.setEmail(u.getEmail());
+					c.setTelephone(u.getPhone());	
 					
 			trans.setContact(c);
 			return trans;
@@ -266,7 +276,7 @@ public class CardTraderWebShop extends AbstractExternalShop {
 	}
 
 	@Override
-	public MTGStockItem getStockById(EnumItems typeStock, Integer id) throws IOException {
+	public MTGStockItem getStockById(EnumItems typeStock, Long id) throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}

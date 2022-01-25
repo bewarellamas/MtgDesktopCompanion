@@ -20,11 +20,18 @@ import org.magic.api.beans.audit.NetworkInfo;
 import org.magic.api.beans.audit.TaskInfo;
 import org.magic.api.beans.audit.TaskInfo.STATE;
 import org.magic.api.exports.impl.JsonExport;
+import org.magic.api.interfaces.abstracts.extra.AbstractEmbeddedCacheProvider;
+import org.magic.services.providers.IPTranslator;
 import org.magic.tools.FileTools;
+import org.magic.tools.UITools;
 
 public class TechnicalServiceManager {
 
 	private static TechnicalServiceManager inst;
+	
+	
+	AbstractEmbeddedCacheProvider<AbstractAuditableItem, List<AbstractAuditableItem>> cache;
+	
 	
 	private List<JsonQueryInfo> jsonInfo;
 	private List<DAOInfo> daoInfos;
@@ -34,7 +41,7 @@ public class TechnicalServiceManager {
 	protected Logger logger = MTGLogger.getLogger(this.getClass());
 	private JsonExport export;
 	private File logsDirectory = new File(MTGConstants.DATA_DIR,"audits");
-	
+	private IPTranslator translator;
 	
 	public static TechnicalServiceManager inst()
 	{
@@ -43,6 +50,39 @@ public class TechnicalServiceManager {
 		
 		return inst;
 	}
+	
+	
+	public static void main(String[] args) {
+		
+		var trans = new IPTranslator();
+		
+		TechnicalServiceManager.inst().getJsonInfo().forEach(info->{
+			
+			info.setLocation(trans.getLocationFor(info.getIp()));
+		});
+		
+		TechnicalServiceManager.inst().store();
+		
+	}
+	
+	
+	
+	public TechnicalServiceManager() {
+		jsonInfo= new ArrayList<>();
+		networkInfos = new ArrayList<>();
+		daoInfos = new ArrayList<>();
+		tasksInfos = new ArrayList<>();
+		discordInfos = new ArrayList<>();
+		export = new JsonExport();
+		translator = new IPTranslator();
+		try {
+			restore();
+		} catch (IOException e) {
+			logger.error("error restore previous log",e);
+		}
+	}
+	
+	
 	
 	public void store()
 	{
@@ -60,28 +100,30 @@ public class TechnicalServiceManager {
 		
 	}
 	
-	public void restore()
+	public void restore() throws IOException
 	{
 		
+		for(File f : FileTools.listFiles(logsDirectory))
+		{
+			if(f.getName().startsWith(JsonQueryInfo.class.getSimpleName()))
+				jsonInfo.addAll(export.fromJsonList(FileTools.readFile(f), JsonQueryInfo.class));
+			else if(f.getName().startsWith(DAOInfo.class.getSimpleName()))
+				daoInfos.addAll(export.fromJsonList(FileTools.readFile(f), DAOInfo.class));
+			else if(f.getName().startsWith(TaskInfo.class.getSimpleName()))
+				tasksInfos.addAll(export.fromJsonList(FileTools.readFile(f), TaskInfo.class));		
+			else if(f.getName().startsWith(NetworkInfo.class.getSimpleName()))
+				networkInfos.addAll(export.fromJsonList(FileTools.readFile(f), NetworkInfo.class));
+			else if(f.getName().startsWith(DiscordInfo.class.getSimpleName()))
+				discordInfos.addAll(export.fromJsonList(FileTools.readFile(f), DiscordInfo.class));	
+		}
 	}
-	
-	
+
 	private <T extends AbstractAuditableItem> void storeItems(Class<T> classe, List<T> items) throws IOException
 	{
-		FileTools.saveFile(Paths.get(logsDirectory.getAbsolutePath(),classe.getSimpleName()+"_"+new Date().hashCode()+"_.json").toFile(), export.toJson(items.stream().map(AbstractAuditableItem::toJson).toList()));
+		FileTools.saveFile(Paths.get(logsDirectory.getAbsolutePath(),classe.getSimpleName()+".json").toFile(), export.toJson(items));
 	}
 	
-	
-	public TechnicalServiceManager() {
-		jsonInfo= new ArrayList<>();
-		networkInfos = new ArrayList<>();
-		daoInfos = new ArrayList<>();
-		tasksInfos = new ArrayList<>();
-		discordInfos = new ArrayList<>();
-		export = new JsonExport();
-	}
-	
-	
+
 	public List<DiscordInfo> getDiscordInfos() {
 		return discordInfos;
 	}
@@ -104,6 +146,7 @@ public class TechnicalServiceManager {
 	
 	public void store(JsonQueryInfo info)
 	{
+		info.setLocation(translator.getLocationFor(info.getIp()));
 		jsonInfo.add(info);
 	}
 	

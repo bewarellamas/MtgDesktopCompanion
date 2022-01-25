@@ -175,6 +175,8 @@ server = {
 								    result[uri] += d.duration;
 								    return result;
 									}, {});
+
+		var countriesCount = [...new Map(datas.map(item =>[item['ip'], item.location])).values()];
 	
 	
 	if(bigDashboard!=null){
@@ -425,6 +427,31 @@ server = {
     };
 
    requestedEndpoint =  new Chart(e, a);
+
+
+
+
+
+	var map = new maplibregl.Map({
+	  container: 'connectionMap',
+	  style: 'https://maps.geoapify.com/v1/styles/klokantech-basic/style.json?apiKey=a8dc51356cb04465a1c44a8a4c773946',
+	});
+	map.addControl(new maplibregl.NavigationControl());
+	$.each(countriesCount,function(index, value){
+		try{
+    		new maplibregl.Marker().setLngLat([value.longitude, value.latitude]).addTo(map);
+    		}
+    		catch(error)
+    		{
+				console.log(error + " " + JSON.stringify(value));
+			}
+
+	});
+
+
+	
+
+
 
 
 	if(tableEndPoint==null)

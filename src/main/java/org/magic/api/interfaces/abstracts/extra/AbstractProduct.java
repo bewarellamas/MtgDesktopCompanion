@@ -1,4 +1,4 @@
-package org.magic.api.interfaces.abstracts;
+package org.magic.api.interfaces.abstracts.extra;
 
 import org.magic.api.beans.MagicEdition;
 import org.magic.api.beans.enums.EnumItems;
@@ -9,7 +9,7 @@ public abstract class AbstractProduct implements MTGProduct {
 
 	private static final long serialVersionUID = 1L;
 	
-	protected Integer productId;
+	protected Long productId;
 	protected String url;
 	protected String name;
 	protected MagicEdition edition;
@@ -49,11 +49,11 @@ public abstract class AbstractProduct implements MTGProduct {
 	}
 	
 	@Override
-	public Integer getProductId() {
+	public Long getProductId() {
 		return productId;
 	}
 	@Override
-	public void setProductId(Integer id) {
+	public void setProductId(Long id) {
 		this.productId = id;
 	}
 	@Override
@@ -91,7 +91,12 @@ public abstract class AbstractProduct implements MTGProduct {
 
 class GenericProduct extends AbstractProduct
 {
-
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
+	
 	private static final long serialVersionUID = 1L;
 	
 }

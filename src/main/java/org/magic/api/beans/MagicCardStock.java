@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.magic.api.beans.enums.EnumItems;
-import org.magic.api.interfaces.abstracts.AbstractStockItem;
+import org.magic.api.interfaces.abstracts.extra.AbstractStockItem;
 
 public class MagicCardStock extends AbstractStockItem<MagicCard> {
 
@@ -12,12 +12,12 @@ public class MagicCardStock extends AbstractStockItem<MagicCard> {
 
 	public MagicCardStock(MagicCard c) {
 		super();
-		id = -1;
+		id = -1L;
 		setProduct(c);
 	}
 	
 	public MagicCardStock() {
-		id=-1;
+		id=-1L;
 		tiersAppIds= new HashMap<>();
 	}
 	

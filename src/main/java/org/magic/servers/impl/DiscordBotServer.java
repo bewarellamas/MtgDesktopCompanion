@@ -35,6 +35,7 @@ import org.magic.api.beans.MagicFormat.FORMATS;
 import org.magic.api.beans.MagicPrice;
 import org.magic.api.beans.audit.DiscordInfo;
 import org.magic.api.beans.enums.MTGColor;
+import org.magic.api.exports.impl.JsonExport;
 import org.magic.api.interfaces.MTGCardsProvider;
 import org.magic.api.interfaces.MTGDao;
 import org.magic.api.interfaces.MTGDashBoard;
@@ -49,6 +50,9 @@ import org.magic.services.MTGConstants;
 import org.magic.services.TechnicalServiceManager;
 import org.magic.tools.MTG;
 import org.magic.tools.UITools;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -78,9 +82,7 @@ public class DiscordBotServer extends AbstractMTGServer {
 	private static final String SHOWCOLLECTIONS = "SHOW_COLLECTIONS";
 	private static final String PRICE_KEYWORDS = "PRICE_KEYWORDS";
 	private static final String RESULTS_SHAKES="RESULTS_SHAKES";
-	
 	private static final String REGEX ="\\{(.*?)\\}";
-	
 	private JDA jda;
 	private ListenerAdapter listener;
 
@@ -105,22 +107,44 @@ public class DiscordBotServer extends AbstractMTGServer {
 			
 			@Override
 			public void onReady(ReadyEvent event) {
-		    	logger.debug(getName() + " bot invited in " + event.getJDA().getGuilds().stream().toList());
+		    	logger.debug(getName() + " bot started");
 			}
-			
-			
-			
+	
 		};
 	}
 	
 	
+	public JsonObject toJsonDetails()
+	{
+		var jo  = new JsonObject();
+		if(isAlive()) {
+		
+		var arrGuilds = new JsonArray();
+			jda.getGuilds().forEach(g->arrGuilds.add(DiscordInfo.parse(g)));
+			jo.add("guilds", arrGuilds);
+			jo.add("user", DiscordInfo.parse(jda.getSelfUser()));
+			try {
+				jo.addProperty("presenceActivity", String.valueOf(jda.getPresence().getActivity()));
+				jo.addProperty("presenceValue", jda.getPresence().getActivity().getName());
+			}catch(Exception e)
+			{
+				logger.error(e);
+			}
+			
+		}
+
+		return jo;
+	}
+	
+	
+	
 	private void analyseMessage(MessageReceivedEvent event) {
 		var info = new DiscordInfo();
-		info.setAuthor(event.getAuthor());
-		info.setChannel(event.getChannel());
+		info.setUser(DiscordInfo.parse(event.getAuthor()));
+		info.setChannel(DiscordInfo.parse(event.getChannel()));
+		
+		
 		info.setMessage(event.getMessage().getContentRaw());
-		
-		
 		
 		var p = Pattern.compile(REGEX);
 		var m = p.matcher(event.getMessage().getContentRaw());
@@ -129,7 +153,7 @@ public class DiscordBotServer extends AbstractMTGServer {
 			
 			if(event.isFromGuild())
 			{
-				info.setGuild(event.getGuild());
+				info.setGuild(DiscordInfo.parse(event.getGuild()));
 				logger.debug("Received channel message :" + event.getMessage().getContentRaw() + " from " + event.getAuthor().getName()+ " in "+event.getGuild().getName()+ "#" + event.getChannel().getName() + " ");
 			}
 			else
@@ -460,7 +484,6 @@ public class DiscordBotServer extends AbstractMTGServer {
 				jda.getPresence().setPresence(Activity.of(ActivityType.valueOf(getString(ACTIVITY_TYPE)), getString(ACTIVITY)), isAlive());
 			
 			logger.info("Server " + getName() +" started");
-			
 			
 		} catch (Exception e) {
 			logger.error(e);

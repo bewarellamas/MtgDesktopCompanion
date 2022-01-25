@@ -54,8 +54,6 @@ import org.magic.api.beans.MagicFormat;
 import org.magic.api.beans.MagicPrice;
 import org.magic.api.beans.SealedStock;
 import org.magic.api.beans.WebShopConfig;
-import org.magic.api.beans.audit.DAOInfo;
-import org.magic.api.beans.audit.DiscordInfo;
 import org.magic.api.beans.audit.JsonQueryInfo;
 import org.magic.api.beans.audit.NetworkInfo;
 import org.magic.api.beans.enums.EnumItems;
@@ -76,8 +74,8 @@ import org.magic.api.interfaces.MTGPricesProvider;
 import org.magic.api.interfaces.MTGProduct;
 import org.magic.api.interfaces.MTGServer;
 import org.magic.api.interfaces.MTGTrackingService;
-import org.magic.api.interfaces.abstracts.AbstractEmbeddedCacheProvider;
 import org.magic.api.interfaces.abstracts.AbstractMTGServer;
+import org.magic.api.interfaces.abstracts.extra.AbstractEmbeddedCacheProvider;
 import org.magic.api.sorters.CardsEditionSorter;
 import org.magic.gui.models.MagicEditionsTableModel;
 import org.magic.services.CardsManagerService;
@@ -687,7 +685,7 @@ public class JSONHttpServer extends AbstractMTGServer {
 	, transformer);
 		
 		get("/sealed/get/:id", URLTools.HEADER_JSON,
-				(request, response) -> getEnabledPlugin(MTGDao.class).getSealedStockById(Integer.parseInt(request.params(":id"))), transformer);
+				(request, response) -> getEnabledPlugin(MTGDao.class).getSealedStockById(Long.parseLong(request.params(":id"))), transformer);
 		
 		get("/stock/list", URLTools.HEADER_JSON,(request, response) -> { 
 			
@@ -699,7 +697,7 @@ public class JSONHttpServer extends AbstractMTGServer {
 		}, transformer);
 
 		get("/stock/get/:idStock", URLTools.HEADER_JSON,
-				(request, response) -> getEnabledPlugin(MTGDao.class).getStockById(Integer.parseInt(request.params(":idStock"))), transformer);
+				(request, response) -> getEnabledPlugin(MTGDao.class).getStockById(Long.parseLong(request.params(":idStock"))), transformer);
 		
 		get("/stock/list/:collection", URLTools.HEADER_JSON,(request, response) ->
 			 getCached(request.pathInfo(), new Callable<Object>() {
@@ -872,7 +870,11 @@ public class JSONHttpServer extends AbstractMTGServer {
 		}, transformer);
 		
 		get("/admin/discord", URLTools.HEADER_JSON, (request, response) -> {
-			return 	TechnicalServiceManager.inst().getDiscordInfos().stream().map(DiscordInfo::toJson).toList();
+			var ret = new JsonObject();
+			var serv = (DiscordBotServer) MTG.getPlugin("Discord", MTGServer.class);
+			ret.add("server", serv.toJsonDetails());
+			ret.add("queries",converter.toJsonElement(TechnicalServiceManager.inst().getDiscordInfos()));
+			return ret;
 		}, transformer);
 		
 		get("/admin/currency", URLTools.HEADER_JSON, (request, response) -> {
@@ -885,12 +887,17 @@ public class JSONHttpServer extends AbstractMTGServer {
 			return cache.entries().keySet();
 		}, transformer);
 		
+		get("/admin/logdump", URLTools.HEADER_JSON, (request, response) -> {
+			TechnicalServiceManager.inst().store();
+			return "OK";
+		}, transformer);
+		
 		get("/admin/jdbc", URLTools.HEADER_JSON, (request, response) -> {
-			return TechnicalServiceManager.inst().getDaoInfos().stream().map(DAOInfo::toJson).toList();
+			return TechnicalServiceManager.inst().getDaoInfos();
 		}, transformer);
 		
 		get("/admin/jsonQueries", URLTools.HEADER_JSON, (request, response) -> {
-			return TechnicalServiceManager.inst().getJsonInfo().stream().map(JsonQueryInfo::toJson).toList();
+			return TechnicalServiceManager.inst().getJsonInfo();
 		}, transformer);
 		
 		get("/admin/threads", URLTools.HEADER_JSON, (request, response) -> {
@@ -992,7 +999,7 @@ public class JSONHttpServer extends AbstractMTGServer {
 			for(MTGProduct p : ret)
 				{
 					Category c = extShop.listCategories().stream().filter(cat->cat.getIdCategory()==Integer.parseInt(request.params(":idCategory"))).findFirst().orElse(new Category());
-					int res = extShop.createProduct(srcShop,p,request.params(":language"),c);
+					var res = extShop.createProduct(srcShop,p,request.params(":language"),c);
 					arr.add(res);
 				}
 			return arr;

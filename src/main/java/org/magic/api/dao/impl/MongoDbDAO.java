@@ -39,9 +39,11 @@ import org.magic.api.beans.MagicNews;
 import org.magic.api.beans.OrderEntry;
 import org.magic.api.beans.SealedStock;
 import org.magic.api.beans.audit.DAOInfo;
+import org.magic.api.beans.enums.EnumItems;
 import org.magic.api.beans.shop.Contact;
 import org.magic.api.beans.shop.Transaction;
 import org.magic.api.interfaces.MTGNewsProvider;
+import org.magic.api.interfaces.MTGStockItem;
 import org.magic.api.interfaces.MTGStorable;
 import org.magic.api.interfaces.abstracts.AbstractMagicDAO;
 import org.magic.services.MTGConstants;
@@ -193,6 +195,7 @@ public class MongoDbDAO extends AbstractMagicDAO {
 								@Override
 								public void commandStarted(CommandStartedEvent event) {
 									e = new DAOInfo();
+									e.setDaoName(getName());
 									e.setQuery(event.getCommand().getFirstKey() + " " + event.getCommand().get(event.getCommand().getFirstKey()));
 									e.setConnectionName(event.getConnectionDescription().toString());
 								}
@@ -1051,7 +1054,7 @@ public class MongoDbDAO extends AbstractMagicDAO {
 	}
 
 	@Override
-	public SealedStock getSealedStockById(int id) throws SQLException {
+	public SealedStock getSealedStockById(Long id) throws SQLException {
 		return deserialize(db.getCollection(colSealed).find(Filters.eq("id", id),BasicDBObject.class).first(),SealedStock.class);
 	}
 
@@ -1106,4 +1109,6 @@ public class MongoDbDAO extends AbstractMagicDAO {
 		});
 		return trans;
 	}
+
+
 }

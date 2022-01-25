@@ -1,4 +1,4 @@
-package org.magic.api.interfaces.abstracts;
+package org.magic.api.interfaces.abstracts.extra;
 
 import static org.magic.tools.MTG.getEnabledPlugin;
 import static org.magic.tools.MTG.getPlugin;
@@ -49,6 +49,7 @@ import org.magic.api.interfaces.MTGNewsProvider;
 import org.magic.api.interfaces.MTGPool;
 import org.magic.api.interfaces.MTGStockItem;
 import org.magic.api.interfaces.MTGStorable;
+import org.magic.api.interfaces.abstracts.AbstractMagicDAO;
 import org.magic.api.pool.impl.NoPool;
 import org.magic.services.MTGConstants;
 import org.magic.services.MTGControler;
@@ -223,7 +224,7 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 			stat.executeUpdate(CREATE_TABLE+notExistSyntaxt()+" decks (id "+getAutoIncrementKeyWord()+" PRIMARY KEY, description "+longTextStorage()+", name VARCHAR(250), dateCreation DATE, dateUpdate DATE, tags VARCHAR(250), commander " +beanStorage()+", main " +beanStorage()+", sideboard " +beanStorage()+", averagePrice DECIMAL)");
 			logger.debug("Create table decks");
 
-			stat.executeUpdate(CREATE_TABLE+notExistSyntaxt()+" conversionsItems (id "+getAutoIncrementKeyWord()+" PRIMARY KEY, name VARCHAR(255),lang VARCHAR(25), source VARCHAR(25),inputId INTEGER,destination VARCHAR(25),outputId INTEGER)");
+			stat.executeUpdate(CREATE_TABLE+notExistSyntaxt()+" conversionsItems (id "+getAutoIncrementKeyWord()+" PRIMARY KEY, name VARCHAR(255),lang VARCHAR(25), source VARCHAR(25),inputId BIGINT,destination VARCHAR(25),outputId BIGINT)");
 			logger.debug("Create table conversionsItems");
 			
 			
@@ -743,9 +744,9 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 					pst.setString(1,n.getName());
 					pst.setString(2,n.getLang());
 					pst.setString(3, n.getSource());
-					pst.setInt(4, n.getInputId());
+					pst.setLong(4, n.getInputId());
 					pst.setString(5, n.getDestination());
-					pst.setInt(6, n.getOutputId());
+					pst.setLong(6, n.getOutputId());
 					executeUpdate(pst);
 					logger.debug(n.getName() +" created");
 					n.setUpdated(false);
@@ -759,10 +760,10 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 				pst.setString(1,n.getName());
 				pst.setString(2,n.getLang());
 				pst.setString(3, n.getSource());
-				pst.setInt(4, n.getInputId());
+				pst.setLong(4, n.getInputId());
 				pst.setString(5, n.getDestination());
-				pst.setInt(6, n.getOutputId());
-				pst.setInt(7, n.getId());
+				pst.setLong(6, n.getOutputId());
+				pst.setLong(7, n.getId());
 				executeUpdate(pst);
 				logger.debug(n.getName() +" updated");
 				n.setUpdated(false);	
@@ -776,7 +777,7 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 	@Override
 	public void deleteConversionItem(ConverterItem n) throws SQLException {
 		try (var c = pool.getConnection(); PreparedStatement pst = c.prepareStatement("DELETE FROM conversionsItems where id=?")) {
-			pst.setInt(1, n.getId());
+			pst.setLong(1, n.getId());
 			executeUpdate(pst);
 		}
 		logger.debug(n +" deleted");
@@ -1020,9 +1021,9 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 			it.setId(rs.getInt("id"));
 			it.setName(rs.getString("name"));
 			it.setSource(rs.getString("source"));
-			it.setInputId(rs.getInt("inputId"));
+			it.setInputId(rs.getLong("inputId"));
 			it.setDestination(rs.getString("destination"));
-			it.setOutputId(rs.getInt("outputId"));
+			it.setOutputId(rs.getLong("outputId"));
 			it.setLang(rs.getString("lang"));
 		return it;
 	}
@@ -1306,7 +1307,7 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 		var sql = "DELETE FROM sealed WHERE id=?";
 		try (var c = pool.getConnection(); PreparedStatement pst = c.prepareStatement(sql)) 
 		{
-			pst.setInt(1, state.getId());
+			pst.setLong(1, state.getId());
 			executeUpdate(pst);
 			notify(state);
 		}
@@ -1314,10 +1315,10 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 	}
 	
 	@Override
-	public SealedStock getSealedStockById(int id) throws SQLException {
+	public SealedStock getSealedStockById(Long id) throws SQLException {
 		try (var c = pool.getConnection();PreparedStatement pst = c.prepareStatement("SELECT * from sealed where id=?")) 
 		{
-				pst.setInt(1, id);
+				pst.setLong(1, id);
 				ResultSet rsC = executeQuery(pst);
 				rsC.next();
 				return readSealed(rsC);
@@ -1382,7 +1383,7 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 				pst.setString(7, (state.getMagicCollection()==null)?MTGControler.getInstance().get(DEFAULT_LIBRARY):state.getMagicCollection().getName());
 				pst.setDouble(8, state.getPrice());
 				storeTiersApps(pst,9,state.getTiersAppIds());
-				pst.setInt(10, state.getId());
+				pst.setLong(10, state.getId());
 				executeUpdate(pst);
 				
 				state.setUpdated(false);
@@ -1700,11 +1701,11 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 	
 	
 	@Override
-	public MagicCardStock getStockById(Integer id) throws SQLException {
+	public MagicCardStock getStockById(Long id) throws SQLException {
 		
 		
 		try (var c = pool.getConnection(); PreparedStatement pst = c.prepareStatement("SELECT * FROM stocks where idstock=?")) {
-			pst.setInt(1, id);
+			pst.setLong(1, id);
 			var rs = executeQuery(pst);
 			
 			rs.next();
@@ -1786,7 +1787,7 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 				storeGrade(pst, 11,state.getGrade());
 				storeTiersApps(pst, 12,state.getTiersAppIds());
 				pst.setBoolean(13, state.isEtched());
-				pst.setInt(14, state.getId());
+				pst.setLong(14, state.getId());
 				executeUpdate(pst);
 			} catch (Exception e) {
 				logger.error(e);
@@ -2097,6 +2098,7 @@ public abstract class AbstractMagicSQLDAO extends AbstractMagicDAO {
 		
 		daoInfo.setQuery(pst.toString().substring(index));
 		daoInfo.setClasseName(pst.getClass().getCanonicalName());
+		daoInfo.setDaoName(this.getName());
 		return daoInfo;
 	}
 	
