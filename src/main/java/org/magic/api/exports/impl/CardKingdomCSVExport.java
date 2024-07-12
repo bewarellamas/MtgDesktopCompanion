@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -22,12 +23,31 @@ import org.magic.services.tools.CardKingdomTools;
 import org.magic.services.tools.FileTools;
 import org.magic.services.tools.MTG;
 
+import com.jayway.jsonpath.DocumentContext;
+import static com.jayway.jsonpath.Criteria.where;
+import static com.jayway.jsonpath.JsonPath.parse;
+
 public class CardKingdomCSVExport extends AbstractFormattedFileCardExport {
 
 
 	
 	private String columns="Name,Edition,Foil,Qty\n";
+	
+	private static File jsonFile;
+	private static DocumentContext cont;
 
+	public CardKingdomCSVExport ()
+	{
+		try {
+		jsonFile=new File(MTGConstants.DATA_DIR,"mtgkingdom.json");
+		cont = parse(jsonFile);
+		}
+		catch (Exception e)
+		{
+			
+		}
+	}
+	
 	@Override
 	public EnumExportCategory getCategory() {
 		return EnumExportCategory.EXTERNAL_FILE_FORMAT;
@@ -37,15 +57,44 @@ public class CardKingdomCSVExport extends AbstractFormattedFileCardExport {
 	public String getFileExtension() {
 		return ".csv";
 	}
-
+	
 	@Override
 	public void exportStock(List<MTGCardStock> stock, File dest) throws IOException {
 		var line = new StringBuilder(columns);
 		for(MTGCardStock mc : stock)
 		{
-			String name= CardKingdomTools.getCKFormattedName(mc.getProduct());
-			String set = CardKingdomTools.getCKFormattedSet(mc.getProduct());
+			//String name= CardKingdomTools.getCKFormattedName(mc.getProduct());
+			//String set = CardKingdomTools.getCKFormattedSet(mc.getProduct());
 
+			String name = mc.getProduct().getName();
+			String scryfallid = mc.getProduct().getScryfallId();
+			String variation = "";
+			String set =  mc.getProduct().getEdition().toString();
+			
+			try {
+				
+				
+				var filter = where("scryfall_id").is(scryfallid);
+				
+				List<Map<String, Object>> arr = cont.read("$.data[?]",filter);
+				
+				name = arr.get(0).get("name").toString();
+				variation = arr.get(0).get("variation").toString();
+				
+				if (!variation.isEmpty())
+					name = name + " (" + variation + ")";
+				
+				set = arr.get(0).get("edition").toString();
+			
+				}
+				catch (Exception e) {
+					logger.debug("something broke {}", e);
+				}
+			
+			
+			
+			
+			
 			line.append(commated(name)).append(getSeparator());
 			line.append(set).append(getSeparator());
 			line.append(String.valueOf(mc.isFoil())).append(getSeparator());
