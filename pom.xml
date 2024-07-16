@@ -74,7 +74,7 @@
 		<dependency>
 		    <groupId>io.trino</groupId>
 		    <artifactId>trino-jdbc</artifactId>
-		    <version>451</version>
+		    <version>452</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.firebirdsql.jdbc</groupId>
@@ -334,7 +334,7 @@
 		<dependency>
 			<groupId>com.fifesoft</groupId>
 			<artifactId>rsyntaxtextarea</artifactId>
-			<version>3.4.1</version>
+			<version>3.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fifesoft</groupId>
@@ -404,7 +404,7 @@
 		<dependency>
 			<groupId>net.dv8tion</groupId>
 			<artifactId>JDA</artifactId>
-			<version>5.0.0</version>
+			<version>5.0.1</version>
 			<exclusions>
 				<exclusion>
 					<groupId>club.minnced</groupId>
@@ -527,7 +527,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-rng-core</artifactId>
-			<version>1.5</version>
+			<version>1.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.freemarker</groupId>
