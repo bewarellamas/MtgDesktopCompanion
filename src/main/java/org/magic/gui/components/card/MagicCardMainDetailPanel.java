@@ -4,13 +4,10 @@ import static org.magic.services.tools.MTG.capitalize;
 import static org.magic.services.tools.MTG.getEnabledPlugin;
 
 import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
@@ -290,10 +287,7 @@ public class MagicCardMainDetailPanel extends JPanel  implements Observer {
 	public MagicCardMainDetailPanel() {
 		
 		obs = new Observable();
-		
-		setPreferredSize(new Dimension(650,430));
 	
-		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{50, 127, 159, 0};
 		gridBagLayout.rowHeights = new int[]{0, 0, 156, 0, 40, 90, 0, 0};
