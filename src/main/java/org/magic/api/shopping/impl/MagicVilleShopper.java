@@ -2,7 +2,6 @@ package org.magic.api.shopping.impl;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
@@ -21,7 +20,6 @@ import org.magic.api.interfaces.MTGCardsProvider;
 import org.magic.api.interfaces.MTGStockItem;
 import org.magic.api.interfaces.abstracts.AbstractMagicShopper;
 import org.magic.services.AccountsManager;
-import org.magic.services.MTGControler;
 import org.magic.services.network.RequestBuilder;
 import org.magic.services.network.URLTools;
 import org.magic.services.tools.MTG;
@@ -91,15 +89,6 @@ public class MagicVilleShopper extends AbstractMagicShopper {
 		return t;
 	}
 	
-	
-	public static void main(String[] args) throws IOException, SQLException {
-		MTGControler.getInstance().init();
-		var shopper = new MagicVilleShopper();
-		shopper.getTransactionById("264533");
-		
-		
-	}
-	
 
 	private MTGStockItem buildCard(Element e) {
 		var st = new MTGCardStock();
@@ -108,7 +97,7 @@ public class MagicVilleShopper extends AbstractMagicShopper {
 		}
 		catch(NumberFormatException ex)
 		{
-			logger.error("error pargin Price {}", e.select("td").get(4).html());
+			logger.error("error parsing Price {}", e.select("td").get(4).html());
 		}
 		
 		try {	
@@ -116,7 +105,7 @@ public class MagicVilleShopper extends AbstractMagicShopper {
 		}
 		catch(NumberFormatException ex)
 		{
-			logger.error("error pargin qty {}", e.select("td").get(5).html());
+			logger.error("error parsing qty {}", e.select("td").get(5).html());
 		}
 		
 		

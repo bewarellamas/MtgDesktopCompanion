@@ -535,7 +535,7 @@ public class UITools {
 		return new DecimalFormat(format,otherSymbols).format(f);
 	}
 
-	public static void initTableFilter(JTable table)
+	public static void initTableFilter(JXTable table)
 	{
 			try {
 				FilterSettings.ignoreCase=true;
@@ -546,6 +546,8 @@ public class UITools {
 			{
 				logger.error("error setting TableFilter of {}",table,e);
 			}
+		
+		
 	}
 
 
@@ -775,7 +777,7 @@ public class UITools {
 	}
 
 
-	public static JComponent createFlowPanel(JComponent... of) {
+	public static JPanel createFlowPanel(JComponent... of) {
 		var tempPanel = new JPanel();
 		((FlowLayout)tempPanel.getLayout()).setAlignment(FlowLayout.LEFT);
 		for(var c : of)
@@ -784,7 +786,7 @@ public class UITools {
 		return tempPanel;
 	}
 	
-	public static JComponent createFlowCenterPanel(JComponent... of) {
+	public static JPanel createFlowCenterPanel(JComponent... of) {
 		var tempPanel = new JPanel();
 		((FlowLayout)tempPanel.getLayout()).setAlignment(FlowLayout.CENTER);
 		for(var c : of)

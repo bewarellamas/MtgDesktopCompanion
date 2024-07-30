@@ -60,7 +60,7 @@
 		<rome.version>2.1.0</rome.version>
 		<log4j.version>2.23.1</log4j.version>
 		<poi.version>5.3.0</poi.version>
-		<slf4j.version>2.0.12</slf4j.version>
+		<slf4j.version>2.1.0-alpha1</slf4j.version>
 		<rhino.version>1.7.15</rhino.version>
 	</properties>
 	<repositories>
@@ -71,10 +71,15 @@
 		</repository>
 	</repositories>
 	<dependencies>
+	<dependency>
+	    <groupId>org.drjekyll</groupId>
+	    <artifactId>fontchooser</artifactId>
+	    <version>3.1.0</version>
+	 </dependency>
 		<dependency>
 		    <groupId>io.trino</groupId>
 		    <artifactId>trino-jdbc</artifactId>
-		    <version>452</version>
+		    <version>453</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.firebirdsql.jdbc</groupId>
@@ -89,7 +94,7 @@
 		<dependency>
 			<groupId>io.lettuce</groupId>
 			<artifactId>lettuce-core</artifactId>
-			<version>6.4.0.M1</version>
+			<version>6.4.0.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.derby</groupId>
@@ -334,7 +339,7 @@
 		<dependency>
 			<groupId>com.fifesoft</groupId>
 			<artifactId>rsyntaxtextarea</artifactId>
-			<version>3.5.0</version>
+			<version>3.5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fifesoft</groupId>
@@ -552,7 +557,7 @@
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itext-core</artifactId>
-			<version>8.0.4</version>
+			<version>8.0.5</version>
 			<type>pom</type>
 		</dependency>
 		<dependency>
